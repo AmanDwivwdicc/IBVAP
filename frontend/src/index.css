@@ -1,0 +1,56 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-ibvap-bg text-gray-100 min-h-screen;
+  }
+}
+
+@layer components {
+  .panel {
+    @apply bg-ibvap-panel border border-ibvap-border rounded-lg;
+  }
+
+  .btn-primary {
+    @apply px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-white font-medium rounded transition-colors disabled:opacity-40 disabled:cursor-not-allowed;
+  }
+
+  .btn-danger {
+    @apply px-4 py-2 bg-red-600 hover:bg-red-500 text-white font-medium rounded transition-colors disabled:opacity-40 disabled:cursor-not-allowed;
+  }
+
+  .btn-secondary {
+    @apply px-4 py-2 bg-gray-700 hover:bg-gray-600 text-gray-100 font-medium rounded transition-colors disabled:opacity-40 disabled:cursor-not-allowed;
+  }
+
+  .status-dot {
+    @apply w-2 h-2 rounded-full inline-block;
+  }
+
+  .severity-critical {
+    @apply border-l-4 border-red-500 bg-red-500/10;
+  }
+
+  .severity-warning {
+    @apply border-l-4 border-amber-500 bg-amber-500/10;
+  }
+
+  .severity-info {
+    @apply border-l-4 border-blue-500 bg-blue-500/10;
+  }
+}
+
+/* Scrollbar styling for ops dashboard */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #111827;
+}
+::-webkit-scrollbar-thumb {
+  background: #374151;
+  border-radius: 3px;
+}
