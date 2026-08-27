@@ -30,11 +30,9 @@ WORKDIR /app/frontend
 RUN npm install -g pnpm
 RUN pnpm install
 
-# Create .env.production file from build args for Next.js build
-ARG NEXT_PUBLIC_SUPABASE_URL
-ARG NEXT_PUBLIC_SUPABASE_ANON_KEY
-RUN echo "NEXT_PUBLIC_SUPABASE_URL=${NEXT_PUBLIC_SUPABASE_URL}" > .env.production && \
-    echo "NEXT_PUBLIC_SUPABASE_ANON_KEY=${NEXT_PUBLIC_SUPABASE_ANON_KEY}" >> .env.production
+# Create .env.production with hardcoded Supabase credentials for build time
+RUN echo "NEXT_PUBLIC_SUPABASE_URL=https://rmeaxsqojjdaalufjkkv.supabase.co" > .env.production && \
+    echo "NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJtZWF4c3FvampkYWFsdWZqa2t2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc4MjEwNjQsImV4cCI6MjEwMzM5NzA2NH0.5Ne93lEEpANNrZPU41lYfvV4WP5LZ01zoMKqyuRcp_0" >> .env.production
 
 # Build the Next.js app
 RUN pnpm run build
