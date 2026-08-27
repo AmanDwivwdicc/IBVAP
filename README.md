@@ -1,25 +1,14 @@
----
-# 详细文档见https://modelscope.cn/docs/%E5%88%9B%E7%A9%BA%E9%97%B4%E5%8D%A1%E7%89%87
-domain: #领域：cv/nlp/audio/multi-modal/AutoML
-# - cv
-tags: #自定义标签
--
-datasets: #关联数据集
-  evaluation:
-  #- iic/ICDAR13_HCTR_Dataset
-  test:
-  #- iic/MTWI
-  train:
-  #- iic/SIBR
-models: #关联模型
-#- iic/ofa_ocr-recognition_general_base_zh
+# IBVAP Central Server & Command Center
 
-## 启动文件(若SDK为Gradio/Streamlit，默认为app.py, 若为Static HTML, 默认为index.html)
-# deployspec:
-#   entry_file: app.py
-license: Apache License 2.0
----
-#### Clone with HTTP
-```bash
- git clone https://www.modelscope.ai/studios/sidrobot/IBVAP.git
-```
+The Intelligent Border Video Analytics Platform (IBVAP) transforms existing standard CCTV networks into an AI-driven smart surveillance grid without requiring expensive, dedicated hardware.
+
+## Project Structure
+- `backend/`: FastAPI application handling Edge ingestion, SSE config push, and biometric profiling.
+- `frontend/`: Next.js 15 Command Center utilizing Supabase SSR and WebSockets for real-time situational awareness.
+- `docs/`: System architecture, API contracts, and integration specs.
+
+## Deployment Strategy
+The current tech stack is designed for a split-deployment architecture:
+- **Backend (FastAPI)**: Hosted on a containerized PaaS or VPS.
+- **Frontend (Next.js)**: Deployed serverlessly (e.g., Vercel) connecting directly to the Supabase database.
+- **Database (Supabase)**: Provides PostgreSQL, pgvector, Realtime sockets, and object storage.

@@ -1,0 +1,39 @@
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# IDEs and editors
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# AI Agents
+.agents/
+AGENTS.md
+
+# Project specific
+backend/__pycache__/
+backend/.venv/
+backend/.ruff_cache/
+backend/server.log
+backend/sse_output.log
+
+frontend/.next/
+frontend/node_modules/
+frontend/build/
+frontend/out/
+frontend/coverage/
+frontend/.vercel/
+frontend/.pnpm-debug.log*
+frontend/*.tsbuildinfo
