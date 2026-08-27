@@ -5,8 +5,8 @@ set -e
 
 echo "Starting FastAPI backend internally on port 8000..."
 cd /app/backend
-# Run uvicorn in the background (&)
-uvicorn main:app --host 127.0.0.1 --port 8000 &
+# Run uvicorn using uv in the background (&)
+uv run uvicorn main:app --host 127.0.0.1 --port 8000 &
 
 echo "Starting Next.js frontend publicly on port 7860..."
 cd /app/frontend

@@ -1,11 +1,11 @@
-# Use a lightweight Debian-based Python image
-FROM python:3.11-slim
+# Use a lightweight Debian-based Python image with uv pre-installed
+FROM ghcr.io/astral-sh/uv:python3.12-bookworm-slim
 
-# Install Node.js, npm, curl, and libatomic1 (required by pnpm on slim debian images)
+# Install Node.js 22 (latest LTS), npm, curl, and libatomic1 (required by pnpm)
 RUN apt-get update && apt-get install -y \
     curl \
     libatomic1 \
-    && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+    && curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
     && apt-get install -y nodejs \
     && rm -rf /var/lib/apt/lists/*
 
@@ -16,28 +16,21 @@ WORKDIR /app
 COPY . .
 
 # ==========================================
-# 1. Setup Backend (FastAPI)
+# 1. Setup Backend (FastAPI) using uv
 # ==========================================
 WORKDIR /app/backend
-RUN pip install --no-cache-dir -r requirements.txt
-# Install uvicorn explicitly just in case it's missing from requirements
-RUN pip install --no-cache-dir uvicorn[standard] asyncpg bcrypt
+# Install dependencies using uv (much faster, uses lockfile)
+RUN uv sync --frozen
 
 # ==========================================
 # 2. Setup Frontend (Next.js)
 # ==========================================
 WORKDIR /app/frontend
-# HuggingFace might not have pnpm, use npm for standard Docker building
+# Install pnpm and dependencies
 RUN npm install -g pnpm
 RUN pnpm install
 
-# Next.js needs these build-time env vars to compile pages that use Supabase
-# In HuggingFace, you will define these in the Space Secrets, but for the Docker build step
-# we need dummy values so the build doesn't crash.
-ARG NEXT_PUBLIC_SUPABASE_URL="https://placeholder.supabase.co"
-ARG NEXT_PUBLIC_SUPABASE_ANON_KEY="placeholder"
-
-# Build the Next.js app
+# Build the Next.js app - uses the actual env vars from ModelScope at build time
 RUN pnpm run build
 
 # ==========================================
@@ -48,7 +41,7 @@ WORKDIR /app
 # Ensure start script is executable
 RUN chmod +x start.sh
 
-# Hugging Face exposes port 7860
+# ModelScope exposes port 7860
 EXPOSE 7860
 
 # Run the startup script that boots both processes
