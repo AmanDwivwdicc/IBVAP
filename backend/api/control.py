@@ -94,8 +94,9 @@ async def sse_generator(device_uuid: str) -> AsyncGenerator[dict, None]:
     try:
         while True:
             try:
-                # Wait for either a notification or 30s timeout for heartbeat
-                await asyncio.wait_for(queue.get(), timeout=30.0)
+                # Wait for either a notification or 15s timeout for heartbeat
+                # Next.js and Nginx proxies often drop idle connections after 30-60s
+                await asyncio.wait_for(queue.get(), timeout=15.0)
                 
                 # If we get here, settings changed. Fetch the new settings.
                 settings_res = supabase.table("device_settings").select("version, settings").eq("device_id", device_uuid).execute()
@@ -106,14 +107,14 @@ async def sse_generator(device_uuid: str) -> AsyncGenerator[dict, None]:
                         "data": json.dumps({"version": current["version"], "settings": current["settings"]})
                     }
             except TimeoutError:
-                # 4. Heartbeat
+                # 4. Heartbeat (keep-alive)
                 yield {
                     "event": "heartbeat",
-                    "data": ""
+                    "data": json.dumps({"status": "alive"})
                 }
     except asyncio.CancelledError:
         # Client disconnected
-        pass
+        logger.info(f"SSE client disconnected for device {device_uuid}")
     finally:
         # 5. Cleanup
         if conn:
