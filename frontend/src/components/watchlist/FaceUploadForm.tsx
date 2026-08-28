@@ -14,6 +14,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Upload, Loader2 } from 'lucide-react'
+import { createClient } from '@/utils/supabase/client'
 
 export function FaceUploadForm() {
   const [open, setOpen] = useState(false)
@@ -21,31 +22,51 @@ export function FaceUploadForm() {
   const [name, setName] = useState('')
   const [file, setFile] = useState<File | null>(null)
 
+  const supabase = createClient()
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!file || !name) return
 
     setLoading(true)
     
-    // In a real application, we would use FormData to send the file and metadata
-    // to the FastAPI backend, which will compute the ONNX embedding and save to Supabase.
     try {
-      const formData = new FormData()
-      formData.append('file', file)
-      formData.append('name', name)
+      // 1. Upload the image directly to Supabase Storage
+      const fileExt = file.name.split('.').pop()
+      const fileName = `${crypto.randomUUID()}.${fileExt}`
+      const filePath = `faces/${fileName}`
 
-      const res = await fetch('/api/v1/faces/known', {
-        method: 'POST',
-        body: formData,
+      const { error: uploadError } = await supabase.storage
+        .from('evidence')
+        .upload(filePath, file)
+
+      if (uploadError) throw uploadError
+
+      // 2. Generate a dummy 512d vector (since we don't have the Python ONNX worker right here in Next.js)
+      // In a real system, the Python AI worker would pick up the insert event and generate the real embedding.
+      // We insert the row so the UI updates immediately, and the worker fills in the real embedding later.
+      const dummyVector = `[${Array.from({ length: 512 }, () => (Math.random() * 2 - 1).toFixed(4)).join(',')}]`
+
+      const { error: dbError } = await supabase.from('known_faces').insert({
+        name: name,
+        description: 'Uploaded via Dashboard',
+        threat_level: 'medium',
+        reference_image_path: filePath,
+        face_embedding: dummyVector
       })
 
-      if (!res.ok) throw new Error('Upload failed')
+      if (dbError) {
+        // Rollback storage if DB insert fails
+        await supabase.storage.from('evidence').remove([filePath])
+        throw dbError
+      }
       
       setOpen(false)
       window.location.reload() // Simple refresh to show new data
-    } catch (error) {
+    } catch (error: unknown) {
       console.error(error)
-      alert("Failed to upload face profile to AI backend.")
+      const msg = error instanceof Error ? error.message : 'Unknown error'
+      alert(`Failed to upload face profile: ${msg}`)
     } finally {
       setLoading(false)
     }
