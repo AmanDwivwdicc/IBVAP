@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button'
 import { Trash2, Save, Undo } from 'lucide-react'
 import { useToastManager } from '@/components/ui/toast'
+import { createClient } from '@/utils/supabase/client'
 
 export interface Point {
   x: number
@@ -33,6 +34,7 @@ export function VirtualFenceCanvas({
   const [isDrawing, setIsDrawing] = useState(false)
   const [imageLoaded, setImageLoaded] = useState(false)
   const toast = useToastManager()
+  const supabase = createClient()
 
   useEffect(() => {
     const drawPolygon = (
@@ -151,21 +153,41 @@ export function VirtualFenceCanvas({
 
   const handleSaveSettings = async () => {
     try {
-      // Expected by FastAPI control plane
+      // Direct Supabase Update
+      const version = crypto.randomUUID()
       const payload = {
-        settings: {
-          virtual_fences: polygons
-        }
+        virtual_fences: polygons
       }
 
-      // We use fetch to call the FastAPI backend to trigger SSE to edge
-      const res = await fetch(`/api/v1/control/devices/${deviceId}/settings`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      })
+      // 1. Check if record exists
+      const { data: existing } = await supabase
+        .from('device_settings')
+        .select('id')
+        .eq('device_id', deviceId)
+        .single()
 
-      if (!res.ok) throw new Error('Failed to save settings')
+      let error;
+      if (existing) {
+        const { error: updateError } = await supabase
+          .from('device_settings')
+          .update({
+            settings: payload as any,
+            version: version
+          })
+          .eq('device_id', deviceId)
+        error = updateError
+      } else {
+        const { error: insertError } = await supabase
+          .from('device_settings')
+          .insert({
+            device_id: deviceId,
+            settings: payload as any,
+            version: version
+          })
+        error = insertError
+      }
+
+      if (error) throw error
       
       toast.add({
         title: "Settings Saved",
