@@ -227,7 +227,7 @@ async def websocket_endpoint(websocket: WebSocket):
                         f"{frame.shape[1]}x{frame.shape[0]}"
                     )
 
-                result = frame_processor.process_frame(
+                result = await frame_processor.process_frame(
                     frame,
                     frame_id,
                 )

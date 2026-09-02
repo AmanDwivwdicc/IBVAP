@@ -40,7 +40,7 @@ class EventEngine:
         return f"{session_id}:{event_type}:{track_id or 'global'}"
 
     @staticmethod
-    def _generate_event_id() -> str:
+    def generate_event_id() -> str:
         """
         Generate a globally unique, human-readable event ID.
 
@@ -62,6 +62,7 @@ class EventEngine:
         evidence_path: str | None = None,
         metadata: dict[str, Any] | None = None,
         allow_duplicate: bool = False,
+        event_id_override: str | None = None,
     ) -> SecurityEvent | None:
         """Create and broadcast a security event."""
 
@@ -87,7 +88,7 @@ class EventEngine:
         # IMPORTANT:
         # Do not use the session manager's counter.
         # Event IDs must remain unique across sessions and restarts.
-        event_id = self._generate_event_id()
+        event_id = event_id_override or self.generate_event_id()
 
         now = datetime.now(timezone.utc)
 
