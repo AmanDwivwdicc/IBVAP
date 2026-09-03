@@ -16,7 +16,11 @@ class Settings(BaseSettings):
     app_name: str = "IBVAP"
     app_version: str = "1.0.0"
     database_url: str = f"sqlite+aiosqlite:///{BASE_DIR / 'ibvap.db'}"
-    cors_origins: str = "http://localhost:5173,http://127.0.0.1:5173"
+    cors_origins: str = (
+    "http://localhost:5173,"
+    "http://127.0.0.1:5173,"
+    "https://ibvap-two.vercel.app"
+)
 
     # Detection & surveillance (used in later phases)
     detection_confidence: float = 0.40
