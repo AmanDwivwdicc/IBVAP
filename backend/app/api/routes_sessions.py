@@ -34,8 +34,6 @@ async def start_session(
             if border:
                 virtual_fence.set_border(border)
 
-        frame_processor.start(session.id)
-
         await event_engine.emit(
             db,
             session.id,

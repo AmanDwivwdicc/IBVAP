@@ -85,6 +85,7 @@ export function useSurveillance() {
 
       wsService.on('ai_started', () => {
         setAiStatus('active')
+        setSessionStatus('surveillance_active')
       }),
 
       wsService.on('ai_stopped', () => {
@@ -245,13 +246,14 @@ export function useSurveillance() {
       })
 
       setSessionId(session.id)
-      setSessionStatus('surveillance_active')
 
-      // Tell backend to start YOLO.
-      wsService.send({
-        type: 'start_ai',
-        session_id: session.id,
-      })
+// Tell backend to start YOLO.
+// We will mark surveillance active only after
+// the backend confirms that AI has started.
+wsService.send({
+  type: 'start_ai',
+  session_id: session.id,
+})
 
       return session
     } catch (err) {
