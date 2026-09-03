@@ -35,16 +35,36 @@ export function useSurveillance() {
   // Backend health
   // ------------------------------------------
   useEffect(() => {
-    api.health()
-      .then((data) => {
+    let mounted = true
+  
+    const checkBackend = async () => {
+      try {
+        const data = await api.health()
+  
+        if (!mounted) return
+  
         setBackendOnline(true)
         setAiPipeline(data.ai_pipeline || 'stub')
         setAiStatus(data.ai_status || 'unknown')
-      })
-      .catch(() => {
+      } catch {
+        if (!mounted) return
+  
         setBackendOnline(false)
         setAiStatus('offline')
-      })
+      }
+    }
+  
+    checkBackend()
+  
+    const interval = setInterval(
+      checkBackend,
+      10000,
+    )
+  
+    return () => {
+      mounted = false
+      clearInterval(interval)
+    }
   }, [])
 
   // ------------------------------------------
