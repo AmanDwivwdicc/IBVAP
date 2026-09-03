@@ -60,13 +60,10 @@ async def stop_session(
         if session is None:
             raise HTTPException(status_code=404, detail="Session not found")
                 # Persist final V1 AI detection counts.
-        if stats:
-            session.total_persons = int(
-                stats.get("total_persons", 0)
-            )
-            session.total_vehicles = int(
-                stats.get("total_vehicles", 0)
-            )
+        # Persist unique AI detection counts collected during the session.
+        ai_stats = frame_processor.get_session_stats()
+        session.total_persons = ai_stats["total_persons"]
+        session.total_vehicles = ai_stats["total_vehicles"]
             
         await event_engine.emit(
             db,

@@ -36,6 +36,8 @@ class FrameProcessor:
         self._tracks: dict[str, dict[str, Any]] = {}
         self._next_person_id = 1
         self._next_vehicle_id = 1
+        self.session_person_ids: set[str] = set()
+        self.session_vehicle_ids: set[str] = set()
 
         self._last_inference_times: list[float] = []
 
@@ -45,6 +47,8 @@ class FrameProcessor:
         self.is_running = True
         self.session_id = session_id
         self.frame_count = 0
+        self.session_person_ids.clear()
+        self.session_vehicle_ids.clear()
 
         self._tracks.clear()
         self._next_person_id = 1
@@ -331,6 +335,19 @@ class FrameProcessor:
             detections
         )
 
+        for track in tracks:
+            track_id = track.get("track_id")
+            object_type = track.get("object_type")
+
+            if not track_id:
+                continue
+
+            if object_type == "PERSON":
+                self.session_person_ids.add(track_id)
+
+            elif object_type == "VEHICLE":
+                self.session_vehicle_ids.add(track_id)
+
         self.frame_count += 1
 
         elapsed = (
@@ -386,26 +403,27 @@ class FrameProcessor:
             ):
 
                 print(
-    "[FENCE DEBUG]",
-    {
-        "track_id": track_id,
-        "current": current_position,
-        "previous": previous_position,
-        "velocity": velocity,
-        "border_defined": virtual_fence.is_defined(),
-        "frame": (
-            frame.shape[1],
-            frame.shape[0],
-        ),
-    }
-)
+                    "[FENCE DEBUG]",
+                    {
+                        "track_id": track_id,
+                        "current": current_position,
+                        "previous": previous_position,
+                        "velocity": velocity,
+                        "border_defined": virtual_fence.is_defined(),
+                        "frame": (
+                            frame.shape[1],
+                            frame.shape[0],
+                        ),
+                    }
+                )
+
                 approaching = virtual_fence.check_approaching(
-    track_id=track_id,
-    current_pos=current_position,
-    velocity=velocity,
-    frame_width=frame.shape[1],
-    frame_height=frame.shape[0],
-)
+                    track_id=track_id,
+                    current_pos=current_position,
+                    velocity=velocity,
+                    frame_width=frame.shape[1],
+                    frame_height=frame.shape[0],
+                )
 
                 if approaching:
                     await self._create_event(
@@ -435,12 +453,12 @@ class FrameProcessor:
                     )
 
                 crossing = virtual_fence.check_crossing(
-    track_id=track_id,
-    current_pos=current_position,
-    previous_pos=previous_position,
-    frame_width=frame.shape[1],
-    frame_height=frame.shape[0],
-)
+                    track_id=track_id,
+                    current_pos=current_position,
+                    previous_pos=previous_position,
+                    frame_width=frame.shape[1],
+                    frame_height=frame.shape[0],
+                )
 
                 if crossing:
                     await self._create_event(
@@ -523,6 +541,12 @@ class FrameProcessor:
             ),
             "status": "active",
             "frame_count": self.frame_count,
+        }
+
+    def get_session_stats(self) -> dict:
+        return {
+            "total_persons": len(self.session_person_ids),
+            "total_vehicles": len(self.session_vehicle_ids),
         }
 
 
