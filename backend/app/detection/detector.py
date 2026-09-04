@@ -71,13 +71,19 @@ class ObjectDetector:
 
         try:
             results = self.model.predict(
-                source=frame,
-                conf=self.confidence,
-                classes=list(RELEVANT_CLASSES.keys()),
-                device="cpu",
-                verbose=False,
-            )
-
+    source=frame,
+    conf=self.confidence,
+    classes=list(RELEVANT_CLASSES.keys()),
+    device="cpu",
+    imgsz=320,
+    max_det=20,
+    verbose=False,
+)
+            print(
+    f"[IBVAP AI] YOLO inference completed | "
+    f"frame={frame_width}x{frame_height} | "
+    f"results={len(results)}"
+)
             detections: list[dict[str, Any]] = []
 
             for result in results:
@@ -123,6 +129,11 @@ class ObjectDetector:
                         }
                     )
 
+
+            print(
+                f"[IBVAP AI] Detections returned: "
+                f"{len(detections)}"
+            )
             return detections
 
         except Exception as exc:
